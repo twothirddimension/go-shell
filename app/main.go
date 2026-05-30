@@ -7,11 +7,13 @@ import (
 var _ = fmt.Print
 
 func main() {
-	// TODO: Uncomment the code below to pass the first stage
-	var cmd string
-	fmt.Print("$ ")
-	fmt.Scanln(&cmd)
+	status := 1
+	for status == 1 {
+		var cmd string
+		fmt.Print("$ ")
+		fmt.Scanln(&cmd)
 
-	fmt.Printf("%s: command not found\n", cmd)
+		fmt.Printf("%s: command not found\n", cmd)
+	}
 
 }
