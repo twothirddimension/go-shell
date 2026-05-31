@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -29,6 +30,11 @@ func handleType(s string) {
 		}
 	}
 
+	if fullPath, err := exec.LookPath(s); err == nil {
+		fmt.Printf("%s is %s\n", s, fullPath)
+		return
+	}
+
 	fmt.Printf("%s: not found\n", s)
 }
 
@@ -38,6 +44,7 @@ func getCommandsList(cmd string) []string {
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
+	pathValues := ""
 	status := 1
 	for status == 1 {
 		fmt.Print("$ ")
@@ -49,6 +56,7 @@ func main() {
 		}
 
 		cmd = cmd[0 : len(cmd)-1]
+		cmd = strings.TrimSpace(cmd)
 		cmdList := getCommandsList(cmd)
 
 		if cmdList[0] == "type" {
@@ -63,6 +71,28 @@ func main() {
 
 		if cmdList[0] == "echo" {
 			handleEcho(cmdList[1:])
+			continue
+		}
+
+		if strings.Contains(cmd, "PATH=") {
+			parts := strings.SplitN(cmd, "=", 2)
+			if len(parts) == 2 && parts[0] == "PATH" {
+				pathValues = os.ExpandEnv(parts[1])
+				os.Setenv("PATH", pathValues)
+				continue
+			}
+		}
+
+		// Run external program
+		if fullPath, err := exec.LookPath(cmdList[0]); err == nil {
+			cmdObj := exec.Command(fullPath, cmdList[1:]...)
+			cmdObj.Stdout = os.Stdout
+			cmdObj.Stderr = os.Stderr
+			cmdObj.Stdin = os.Stdin
+			err := cmdObj.Run()
+			if err != nil {
+				// The command execution handles output/errors on stdout/stderr.
+			}
 			continue
 		}
 
