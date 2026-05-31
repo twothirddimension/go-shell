@@ -86,12 +86,13 @@ func main() {
 		// Run external program
 		if fullPath, err := exec.LookPath(cmdList[0]); err == nil {
 			cmdObj := exec.Command(fullPath, cmdList[1:]...)
+			cmdObj.Args[0] = cmdList[0]
 			cmdObj.Stdout = os.Stdout
 			cmdObj.Stderr = os.Stderr
 			cmdObj.Stdin = os.Stdin
 			err := cmdObj.Run()
 			if err != nil {
-				// The command execution handles output/errors on stdout/stderr.
+				fmt.Print(err)
 			}
 			continue
 		}
