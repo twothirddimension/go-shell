@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ func handlePWD() {
 }
 
 func handleType(s string) {
-	typesList := []string{"echo", "exit", "type", "pwd"}
+	typesList := []string{"echo", "exit", "type", "pwd", "cd"}
 
 	for i := 0; i < len(typesList); i++ {
 		if s == typesList[i] {
@@ -87,6 +88,50 @@ func main() {
 				handlePWD()
 				continue
 			}
+		}
+
+		if cmdList[0] == "cd" {
+			target := os.Getenv("HOME")
+			if len(cmdList) > 1 {
+				target = cmdList[1]
+			}
+
+			if strings.HasPrefix(target, "~") {
+				home, err := os.UserHomeDir()
+				if err == nil {
+					target = filepath.Join(home, strings.TrimPrefix(target, "~"))
+				} else {
+					target = filepath.Join(os.Getenv("HOME"), strings.TrimPrefix(target, "~"))
+				}
+			}
+
+			absPath, err := filepath.Abs(target)
+			if err != nil {
+				fmt.Printf("Error resolving path %s\n", err.Error())
+				continue
+			}
+
+			realPath, err := filepath.EvalSymlinks(absPath)
+			if err != nil {
+				realPath = absPath
+			}
+
+			info, err := os.Stat(realPath)
+			if err != nil {
+				fmt.Printf("cd: %s: No such file or directory\n", target)
+				continue
+			}
+
+			if !info.IsDir() {
+				fmt.Printf("cd: %s: Not a directory\n", target)
+				continue
+			}
+
+			err = os.Chdir(realPath)
+			if err != nil {
+				fmt.Printf("cd: %s: No such file or directory\n", target)
+			}
+			continue
 		}
 
 		if strings.Contains(cmd, "PATH=") {
