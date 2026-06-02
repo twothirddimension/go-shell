@@ -20,8 +20,16 @@ func handleEcho(s []string) {
 	}
 }
 
+func handlePWD() {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(wd)
+}
+
 func handleType(s string) {
-	typesList := []string{"echo", "exit", "type"}
+	typesList := []string{"echo", "exit", "type", "pwd"}
 
 	for i := 0; i < len(typesList); i++ {
 		if s == typesList[i] {
@@ -72,6 +80,13 @@ func main() {
 		if cmdList[0] == "echo" {
 			handleEcho(cmdList[1:])
 			continue
+		}
+
+		if cmdList[0] == "pwd" {
+			if len(cmdList) == 1 {
+				handlePWD()
+				continue
+			}
 		}
 
 		if strings.Contains(cmd, "PATH=") {
